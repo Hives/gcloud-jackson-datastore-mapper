@@ -1,7 +1,10 @@
+import com.adarshr.gradle.testlogger.theme.ThemeType.MOCHA
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.6.10"
+
+    id("com.adarshr.test-logger") version "2.0.0"
 }
 
 group = "me.hives"
@@ -27,4 +30,10 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+    testlogger {
+        theme = MOCHA
+    }
 }
