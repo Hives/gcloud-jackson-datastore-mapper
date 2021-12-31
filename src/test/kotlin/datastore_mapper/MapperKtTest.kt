@@ -67,4 +67,30 @@ class MapperKtTest : StringSpec({
 
         entity.contains("optionalIntProperty") shouldBe false
     }
+
+    "a Boolean property gets set as a Boolean" {
+        data class TestClass(val booleanProperty: Boolean)
+        val testObject = TestClass(booleanProperty = false)
+        val entity = testObject.toEntity(mockKey)
+
+        entity.contains("booleanProperty") shouldBe true
+        entity.getBoolean("booleanProperty") shouldBe false
+    }
+
+    "an optional Boolean property gets set as a Boolean" {
+        data class TestClass(val optionalBooleanProperty: Boolean?)
+        val testObject = TestClass(optionalBooleanProperty = false)
+        val entity = testObject.toEntity(mockKey)
+
+        entity.contains("optionalBooleanProperty") shouldBe true
+        entity.getBoolean("optionalBooleanProperty") shouldBe false
+    }
+
+    "an optional Boolean property with value null does not get set" {
+        data class TestClass(val optionalBooleanProperty: Boolean?)
+        val testObject = TestClass(optionalBooleanProperty = null)
+        val entity = testObject.toEntity(mockKey)
+
+        entity.contains("optionalBooleanProperty") shouldBe false
+    }
 })
