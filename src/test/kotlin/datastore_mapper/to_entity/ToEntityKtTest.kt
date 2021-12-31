@@ -1,11 +1,11 @@
-package datastore_mapper
+package datastore_mapper.to_entity
 
 import com.google.cloud.datastore.Key
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 
-class MapperKtTest : StringSpec({
+class ToEntityKtTest : StringSpec({
     val mockKey = mockk<Key>()
 
     "returns an entity with the key set to the provided value" {

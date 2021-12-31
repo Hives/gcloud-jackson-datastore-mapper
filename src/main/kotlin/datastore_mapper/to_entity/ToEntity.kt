@@ -1,4 +1,4 @@
-package datastore_mapper
+package datastore_mapper.to_entity
 
 import com.google.cloud.datastore.Entity
 import com.google.cloud.datastore.Key
