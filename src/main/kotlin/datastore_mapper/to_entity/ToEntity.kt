@@ -2,6 +2,7 @@ package datastore_mapper.to_entity
 
 import com.google.cloud.datastore.Entity
 import com.google.cloud.datastore.Key
+import com.google.cloud.datastore.ListValue
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 
@@ -25,11 +26,25 @@ fun <T: Any> T.toEntity(
                     is String -> entity.set(property.name, value)
                     is Int -> entity.set(property.name, value.toLong())
                     is Boolean -> entity.set(property.name, value)
+                    is List<*> -> entity.setList(property.name, value)
+                    // TODO should blow up here for unknown type
                 }
             }
         }
 
     return entity.build()
+}
+
+@Suppress("UNCHECKED_CAST")
+fun Entity.Builder.setList(name: String, list: List<*>) {
+    try {
+        val stringList = list as List<String>
+
+        val listValue = ListValue.newBuilder()
+        stringList.forEach { listValue.addValue(it) }
+
+        this.set(name, listValue.build())
+    } catch (e: Exception) {}
 }
 
 private fun createKey(keyValue: Any, kindName: String, projectId: String) =

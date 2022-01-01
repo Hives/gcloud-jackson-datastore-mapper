@@ -14,7 +14,8 @@ class EndToEndTest : StringSpec({
         val id: String,
         val stringProperty: String,
         val intProperty: Int,
-        val booleanProperty: Boolean
+        val booleanProperty: Boolean,
+        val listProperty: List<String>
     )
 
     beforeEach {
@@ -26,7 +27,8 @@ class EndToEndTest : StringSpec({
             id = "my-test-id",
             stringProperty = "FooBar",
             intProperty = 42,
-            booleanProperty = false
+            booleanProperty = false,
+            listProperty = listOf("one", "two", "three")
         )
 
         val entity = testObject.toEntity(TestClass::id, datastore.project, "TestKind")

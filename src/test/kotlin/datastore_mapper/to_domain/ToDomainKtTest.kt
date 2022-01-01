@@ -2,10 +2,12 @@ package datastore_mapper.to_domain
 
 import com.google.cloud.datastore.Entity
 import com.google.cloud.datastore.Key
+import com.google.cloud.datastore.ListValue
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 
 class ToDomainKtTest : StringSpec({
+
     "can read a string id into a given property" {
         data class TestClass(val id: String)
 
@@ -36,7 +38,7 @@ class ToDomainKtTest : StringSpec({
         result shouldBe TestClass(id = 123456)
     }
 
-    "can convert a String parameter" {
+    "can convert a String property" {
         data class TestClass(val id: String, val stringProperty: String)
 
         val entity = Entity.newBuilder(createKey("id")).set("stringProperty", "Foo").build()
@@ -46,7 +48,7 @@ class ToDomainKtTest : StringSpec({
         result shouldBe TestClass(id = "id", stringProperty = "Foo")
     }
 
-    "can convert an optional String parameter" {
+    "can convert an optional String property" {
         data class TestClass(val id: String, val stringProperty: String?)
 
         val entity = Entity.newBuilder(createKey("id")).set("stringProperty", "Foo").build()
@@ -56,7 +58,7 @@ class ToDomainKtTest : StringSpec({
         result shouldBe TestClass(id = "id", stringProperty = "Foo")
     }
 
-    "sets an optional String parameter to null if not present on the entity" {
+    "sets an optional String property to null if not present on the entity" {
         data class TestClass(val id: String, val stringProperty: String?)
 
         val entity = Entity.newBuilder(createKey("id")).build()
@@ -66,64 +68,80 @@ class ToDomainKtTest : StringSpec({
         result shouldBe TestClass(id = "id", stringProperty = null)
     }
 
-    "can convert an Int parameter" {
-        data class TestClass(val id: String, val intParameter: Int)
+    "can convert an Int property" {
+        data class TestClass(val id: String, val intProperty: Int)
 
-        val entity = Entity.newBuilder(createKey("id")).set("intParameter", 42L).build()
-
-        val result = entity.toDomain(TestClass::class, TestClass::id)
-
-        result shouldBe TestClass(id = "id", intParameter = 42)
-    }
-
-    "can convert an optional Int parameter" {
-        data class TestClass(val id: String, val intParameter: Int?)
-
-        val entity = Entity.newBuilder(createKey("id")).set("intParameter", 42L).build()
+        val entity = Entity.newBuilder(createKey("id")).set("intProperty", 42L).build()
 
         val result = entity.toDomain(TestClass::class, TestClass::id)
 
-        result shouldBe TestClass(id = "id", intParameter = 42)
+        result shouldBe TestClass(id = "id", intProperty = 42)
     }
 
-    "sets an optional Int parameter to null if not present on the entity" {
-        data class TestClass(val id: String, val intParameter: Int?)
+    "can convert an optional Int property" {
+        data class TestClass(val id: String, val intProperty: Int?)
+
+        val entity = Entity.newBuilder(createKey("id")).set("intProperty", 42L).build()
+
+        val result = entity.toDomain(TestClass::class, TestClass::id)
+
+        result shouldBe TestClass(id = "id", intProperty = 42)
+    }
+
+    "sets an optional Int property to null if not present on the entity" {
+        data class TestClass(val id: String, val intProperty: Int?)
 
         val entity = Entity.newBuilder(createKey("id")).build()
 
         val result = entity.toDomain(TestClass::class, TestClass::id)
 
-        result shouldBe TestClass(id = "id", intParameter = null)
+        result shouldBe TestClass(id = "id", intProperty = null)
     }
 
-    "can convert a Boolean parameter" {
-        data class TestClass(val id: String, val booleanParameter: Boolean)
+    "can convert a Boolean property" {
+        data class TestClass(val id: String, val booleanProperty: Boolean)
 
-        val entity = Entity.newBuilder(createKey("id")).set("booleanParameter", false).build()
+        val entity = Entity.newBuilder(createKey("id")).set("booleanProperty", false).build()
 
         val result = entity.toDomain(TestClass::class, TestClass::id)
 
-        result shouldBe TestClass(id = "id", booleanParameter = false)
+        result shouldBe TestClass(id = "id", booleanProperty = false)
     }
 
-    "can convert an optional Boolean parameter" {
-        data class TestClass(val id: String, val booleanParameter: Boolean?)
+    "can convert an optional Boolean property" {
+        data class TestClass(val id: String, val booleanProperty: Boolean?)
 
-        val entity = Entity.newBuilder(createKey("id")).set("booleanParameter", false).build()
+        val entity = Entity.newBuilder(createKey("id")).set("booleanProperty", false).build()
 
         val result = entity.toDomain(TestClass::class, TestClass::id)
 
-        result shouldBe TestClass(id = "id", booleanParameter = false)
+        result shouldBe TestClass(id = "id", booleanProperty = false)
     }
 
-    "sets an optional Boolean parameter to null if not present on the entity" {
-        data class TestClass(val id: String, val booleanParameter: Boolean?)
+    "sets an optional Boolean property to null if not present on the entity" {
+        data class TestClass(val id: String, val booleanProperty: Boolean?)
 
         val entity = Entity.newBuilder(createKey("id")).build()
 
         val result = entity.toDomain(TestClass::class, TestClass::id)
 
-        result shouldBe TestClass(id = "id", booleanParameter = null)
+        result shouldBe TestClass(id = "id", booleanProperty = null)
+    }
+
+    "can convert a list of string values" {
+        data class TestClass(val id: String, val listProperty: List<String>)
+
+        val listValue = ListValue.newBuilder()
+        listValue.addValue("one")
+        listValue.addValue("two")
+
+        val entity = Entity.newBuilder(createKey("id"))
+            .set("listProperty", listValue.build())
+            .build()
+
+        val result = entity.toDomain(TestClass::class, TestClass::id)
+
+        result shouldBe TestClass(id = "id", listProperty = listOf("one", "two"))
     }
 })
 

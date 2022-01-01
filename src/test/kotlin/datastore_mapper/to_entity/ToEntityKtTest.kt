@@ -1,6 +1,8 @@
 package datastore_mapper.to_entity
 
+import com.google.cloud.datastore.Value
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 
 class ToEntityKtTest : StringSpec({
@@ -114,5 +116,16 @@ class ToEntityKtTest : StringSpec({
         val entity = testObject.toEntity(TestClass::id, "my-project", "MyKind")
 
         entity.contains("optionalBooleanProperty") shouldBe false
+    }
+
+    "a list of strings gets set as a list of strings" {
+        data class TestClass(val id: String, val listProperty: List<String>)
+        val testObject = TestClass(id = "my-id", listProperty = listOf("one", "two"))
+        val entity = testObject.toEntity(TestClass::id, "my-project", "MyKind")
+
+        entity.contains("listProperty") shouldBe true
+
+        val listValues = entity.getList<Value<String>>("listProperty").map { it.get() }
+        listValues shouldContainExactly listOf("one", "two")
     }
 })
