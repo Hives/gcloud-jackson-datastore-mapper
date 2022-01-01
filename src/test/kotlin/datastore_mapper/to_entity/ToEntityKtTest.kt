@@ -8,7 +8,7 @@ class ToEntityKtTest : StringSpec({
     "can create a key from given String property" {
         data class TestClass(val id: String)
         val testObject = TestClass(id = "my-id")
-        val entity = testObject.toEntity(TestClass::id, "TestClassKind", "my-test-project")
+        val entity = testObject.toEntity(TestClass::id, "my-test-project", "TestClassKind")
 
         entity.key.name shouldBe "my-id"
         entity.key.kind shouldBe "TestClassKind"
@@ -19,7 +19,7 @@ class ToEntityKtTest : StringSpec({
     "can create a key from given Int property" {
         data class TestClass(val id: Int)
         val testObject = TestClass(id = 12345)
-        val entity = testObject.toEntity(TestClass::id, "TestClassKind", "my-test-project")
+        val entity = testObject.toEntity(TestClass::id, "my-test-project", "TestClassKind")
 
         entity.key.id shouldBe 12345
         entity.key.kind shouldBe "TestClassKind"
@@ -30,7 +30,7 @@ class ToEntityKtTest : StringSpec({
     "can create a key from given Long property" {
         data class TestClass(val id: Long)
         val testObject = TestClass(id = 12345)
-        val entity = testObject.toEntity(TestClass::id, "TestClassKind", "my-test-project")
+        val entity = testObject.toEntity(TestClass::id, "my-test-project", "TestClassKind")
 
         entity.key.id shouldBe 12345
         entity.key.kind shouldBe "TestClassKind"
@@ -41,7 +41,7 @@ class ToEntityKtTest : StringSpec({
     "a string property gets set as a string" {
         data class TestClass(val id: String, val stringProperty: String)
         val testObject = TestClass(id = "my-id", stringProperty = "Foo")
-        val entity = testObject.toEntity(TestClass::id, "MyKind", "my-project")
+        val entity = testObject.toEntity(TestClass::id, "my-project", "MyKind")
 
         entity.contains("stringProperty") shouldBe true
         entity.getString("stringProperty") shouldBe "Foo"
@@ -50,7 +50,7 @@ class ToEntityKtTest : StringSpec({
     "an optional string property gets set as a string" {
         data class TestClass(val id: String, val optionalStringProperty: String?)
         val testObject = TestClass(id = "my-id", optionalStringProperty = "Foo")
-        val entity = testObject.toEntity(TestClass::id, "MyKind", "my-project")
+        val entity = testObject.toEntity(TestClass::id, "my-project", "MyKind")
 
         entity.contains("optionalStringProperty") shouldBe true
         entity.getString("optionalStringProperty") shouldBe "Foo"
@@ -59,7 +59,7 @@ class ToEntityKtTest : StringSpec({
     "an optional string property with value null does not get set" {
         data class TestClass(val id: String, val optionalStringProperty: String?)
         val testObject = TestClass(id = "my-id", optionalStringProperty = null)
-        val entity = testObject.toEntity(TestClass::id, "MyKind", "my-project")
+        val entity = testObject.toEntity(TestClass::id, "my-project", "MyKind")
 
         entity.contains("optionalStringProperty") shouldBe false
     }
@@ -67,7 +67,7 @@ class ToEntityKtTest : StringSpec({
     "an Int property gets set as a Long" {
         data class TestClass(val id: String, val intProperty: Int)
         val testObject = TestClass(id = "my-id", intProperty = 42)
-        val entity = testObject.toEntity(TestClass::id, "MyKind", "my-project")
+        val entity = testObject.toEntity(TestClass::id, "my-project", "MyKind")
 
         entity.contains("intProperty") shouldBe true
         entity.getLong("intProperty") shouldBe 42
@@ -76,7 +76,7 @@ class ToEntityKtTest : StringSpec({
     "an optional Int property gets set as a Long" {
         data class TestClass(val id: String, val optionalIntProperty: Int?)
         val testObject = TestClass(id = "my-id", optionalIntProperty = 42)
-        val entity = testObject.toEntity(TestClass::id, "MyKind", "my-project")
+        val entity = testObject.toEntity(TestClass::id, "my-project", "MyKind")
 
         entity.contains("optionalIntProperty") shouldBe true
         entity.getLong("optionalIntProperty") shouldBe 42
@@ -85,7 +85,7 @@ class ToEntityKtTest : StringSpec({
     "an optional Int property with value null does not get set" {
         data class TestClass(val id: String, val optionalIntProperty: Int?)
         val testObject = TestClass(id = "my-id", optionalIntProperty = null)
-        val entity = testObject.toEntity(TestClass::id, "MyKind", "my-project")
+        val entity = testObject.toEntity(TestClass::id, "my-project", "MyKind")
 
         entity.contains("optionalIntProperty") shouldBe false
     }
@@ -93,7 +93,7 @@ class ToEntityKtTest : StringSpec({
     "a Boolean property gets set as a Boolean" {
         data class TestClass(val id: String, val booleanProperty: Boolean)
         val testObject = TestClass(id = "my-id", booleanProperty = false)
-        val entity = testObject.toEntity(TestClass::id, "MyKind", "my-project")
+        val entity = testObject.toEntity(TestClass::id, "my-project", "MyKind")
 
         entity.contains("booleanProperty") shouldBe true
         entity.getBoolean("booleanProperty") shouldBe false
@@ -102,7 +102,7 @@ class ToEntityKtTest : StringSpec({
     "an optional Boolean property gets set as a Boolean" {
         data class TestClass(val id: String, val optionalBooleanProperty: Boolean?)
         val testObject = TestClass(id = "my-id", optionalBooleanProperty = false)
-        val entity = testObject.toEntity(TestClass::id, "MyKind", "my-project")
+        val entity = testObject.toEntity(TestClass::id, "my-project", "MyKind")
 
         entity.contains("optionalBooleanProperty") shouldBe true
         entity.getBoolean("optionalBooleanProperty") shouldBe false
@@ -111,7 +111,7 @@ class ToEntityKtTest : StringSpec({
     "an optional Boolean property with value null does not get set" {
         data class TestClass(val id: String, val optionalBooleanProperty: Boolean?)
         val testObject = TestClass(id = "my-id", optionalBooleanProperty = null)
-        val entity = testObject.toEntity(TestClass::id, "MyKind", "my-project")
+        val entity = testObject.toEntity(TestClass::id, "my-project", "MyKind")
 
         entity.contains("optionalBooleanProperty") shouldBe false
     }

@@ -7,8 +7,8 @@ import kotlin.reflect.full.memberProperties
 
 fun <T: Any> T.toEntity(
     keyProperty: KProperty1<T, Any>,
-    kindName: String,
     projectId: String,
+    kindName: String,
 ): Entity {
     val key = createKey(keyProperty.get(this), kindName, projectId)
 
