@@ -9,6 +9,6 @@ Maps Kotlin data classes to gcloud datastore entities, and vice versa
   - `enum` classes
   - other types of numbers?
 - Collections (`List`, `Set`, `Map`...?)
-- How to handle id / key mappings?
 - Nested entities
 - Handle sealed classes automatically?
+- Indexes?
