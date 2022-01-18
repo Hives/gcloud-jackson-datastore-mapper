@@ -121,6 +121,7 @@ class ToEntityKtTest : StringSpec({
     "a list of strings gets set as a list of strings" {
         data class TestClass(val id: String, val listProperty: List<String>)
         val testObject = TestClass(id = "my-id", listProperty = listOf("one", "two"))
+        
         val entity = testObject.toEntity(TestClass::id, "my-project", "MyKind")
 
         entity.contains("listProperty") shouldBe true

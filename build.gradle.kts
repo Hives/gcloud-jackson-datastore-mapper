@@ -19,6 +19,11 @@ dependencies {
     implementation("com.google.cloud:google-cloud-datastore")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
 
+//    implementation("com.fasterxml.jackson.core:jackson-core:2.13.9")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.1")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.1")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
+
     testImplementation("io.kotest:kotest-runner-junit5:5.0.3")
     testImplementation("io.kotest:kotest-assertions-core-jvm:5.0.3")
     testImplementation("org.testcontainers:testcontainers:1.16.2")
