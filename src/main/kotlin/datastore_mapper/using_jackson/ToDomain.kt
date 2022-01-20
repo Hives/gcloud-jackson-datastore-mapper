@@ -74,7 +74,10 @@ fun <T : Any> Entity.toDomain(targetClass: KClass<T>, keyProperty: KProperty1<T,
 fun Entity.toNode(keyPropertyName: String): JsonNode {
     val node = mapper.createObjectNode()
 
-    if (keyPropertyName != null) node.put(keyPropertyName, key.name)
+    when {
+        key.hasName() -> node.put(keyPropertyName, key.name)
+        key.hasId() -> node.put(keyPropertyName, key.id)
+    }
 
     properties.forEach { (name, value) ->
         when (value.type) {
