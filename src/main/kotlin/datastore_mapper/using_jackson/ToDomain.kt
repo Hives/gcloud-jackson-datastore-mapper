@@ -23,12 +23,15 @@ private val mapper = jacksonObjectMapper()
 fun main() {
     val datastore = createDatastoreClient("jl-digital-merch-flex", "paul-test")
 
+    val timestampString = Timestamp.parseTimestamp(Instant.now().toString()).toString()
+    println(timestampString)
+
     val input = TestClass(
         id = "my-test-id",
         integer = 42,
         long = 99L,
         bigDecimal = BigDecimal.valueOf(12.34),
-        string = "Hello",
+        string = timestampString,
         bool = false,
         date = Instant.now(),
         listOfStrings = listOf("one", "two", "three"),
@@ -93,11 +96,11 @@ fun Entity.toNode(keyPropertyName: String): JsonNode {
     return node
 }
 
-fun <T: Value<*>> List<T>.toNode(): JsonNode {
+fun <T : Value<*>> List<T>.toNode(): JsonNode {
     val node = mapper.createArrayNode()
 
     forEach { value ->
-        when(value.type) {
+        when (value.type) {
             ValueType.STRING -> node.add(value.get() as String)
             ValueType.LONG -> node.add(value.get() as Long)
             ValueType.ENTITY -> node.add((value.get() as FullEntity<IncompleteKey>).toNode())
