@@ -24,8 +24,10 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
 
-    testImplementation("io.kotest:kotest-runner-junit5:5.0.3")
-    testImplementation("io.kotest:kotest-assertions-core-jvm:5.0.3")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.6.0")
+    testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.20")
+    testImplementation("io.mockk:mockk:1.10.0")
+
     testImplementation("org.testcontainers:testcontainers:1.16.2")
 }
 

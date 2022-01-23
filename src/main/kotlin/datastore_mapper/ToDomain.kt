@@ -1,4 +1,4 @@
-package datastore_mapper.using_jackson
+package datastore_mapper
 
 import TestClass
 import TestClass.NestedClass
@@ -48,8 +48,7 @@ fun main() {
         )
     )
 
-    val entity = createEntity(
-        fromValue = input,
+    val entity = input.toEntity(
         keyProperty = TestClass::id,
         kind = "TestKind2",
         datastore = datastore
@@ -57,7 +56,7 @@ fun main() {
 
     datastore.put(entity)
 
-    val retrieved = datastore.get(datastore.createKey("TestKind2", "my-test-id"))
+    val retrieved = datastore.get(datastore.newKeyFactory().setKind("TestKind2").newKey("my-test-id"))
 
     val output = retrieved.toDomain(TestClass::class, TestClass::id)
 

@@ -1,4 +1,4 @@
-package datastore_mapper.using_jackson
+package datastore_mapper
 
 import TestClass
 import TestClass.NestedClass
@@ -48,8 +48,7 @@ fun main() {
         )
     )
 
-    val entity = createEntity(
-        fromValue = input,
+    val entity = input.toEntity(
         keyProperty = TestClass::id,
         kind = "TestKind",
         datastore = datastore
@@ -58,29 +57,35 @@ fun main() {
     datastore.put(entity)
 }
 
-fun <T> createEntity(
-    fromValue: T,
+fun <T> T.toEntity(
     keyProperty: KProperty1<T, Any>,
     kind: String,
     datastore: Datastore,
-): Entity {
-    val node: JsonNode = mapper.valueToTree(fromValue)
+): FullEntity<IncompleteKey> {
+    val node: JsonNode = mapper.valueToTree(this)
 
     // would be better to specify the permissible types of key property in the signature of this function somehow?
-    val key = when (val keyValue = keyProperty.get(fromValue)) {
+    val key = when (val keyValue = keyProperty.get(this)) {
         is String -> datastore.createKey(kind, keyValue)
         is Number -> datastore.createKey(kind, keyValue.toLong())
-        else -> throw RuntimeException("Invalid key value: $keyValue. Expected a String or Int.")
+        else -> throw RuntimeException("Invalid key value: $keyValue. Expected a string or number.")
     }
 
-    return createEntityFromNode(node, key, keyProperty.name)
+    return node.toEntity(KeyDetails(key, keyProperty.name))
 }
 
-fun createEntityFromNode(node: JsonNode, key: Key, keyPropertyName: String? = null): Entity {
-    val entity = Entity.newBuilder(key)
+data class KeyDetails(
+    val key: Key,
+    val propertyName: String
+)
 
-    node.fields().forEach { field ->
-        if (field.key != keyPropertyName) {
+private fun JsonNode.toEntity(keyDetails: KeyDetails? = null): FullEntity<IncompleteKey> {
+    val entity = Entity.newBuilder()
+
+    keyDetails?.also { entity.setKey(keyDetails.key) }
+
+    fields().forEach { field ->
+        if (field.key != keyDetails?.propertyName) {
             when {
                 field.value.isBigDecimal -> entity.set(field.key, field.value.asText())
                 field.value.isInt -> entity.set(field.key, field.value.asLong())
@@ -93,8 +98,8 @@ fun createEntityFromNode(node: JsonNode, key: Key, keyPropertyName: String? = nu
                     }
                 }
                 field.value.isBoolean -> entity.set(field.key, field.value.asBoolean())
-                field.value.isObject -> entity.set(field.key, createNestedEntityFromNode(field.value))
-                field.value.isArray -> entity.set(field.key, field.value.asList())
+                field.value.isObject -> entity.set(field.key, field.value.toEntity())
+                field.value.isArray -> entity.set(field.key, field.value.toListValue())
                 field.value.isNull -> Unit
                 else -> throw RuntimeException("Value of unknown type: ${field.value}")
             }
@@ -104,32 +109,7 @@ fun createEntityFromNode(node: JsonNode, key: Key, keyPropertyName: String? = nu
     return entity.build()
 }
 
-fun createNestedEntityFromNode(node: JsonNode): FullEntity<IncompleteKey> {
-    val entity = Entity.newBuilder()
-
-    node.fields().forEach { field ->
-        when {
-            field.value.isBigDecimal -> entity.set(field.key, field.value.asText())
-            field.value.isInt -> entity.set(field.key, field.value.asLong())
-            field.value.isLong -> entity.set(field.key, field.value.asLong())
-            field.value.isTextual -> {
-                try {
-                    entity.set(field.key, field.value.asTimestamp())
-                } catch (e: RuntimeException) {
-                    entity.set(field.key, field.value.asText())
-                }
-            }
-            field.value.isBoolean -> entity.set(field.key, field.value.asBoolean())
-            field.value.isObject -> entity.set(field.key, createNestedEntityFromNode(field.value))
-            field.value.isArray -> entity.set(field.key, field.value.asList())
-            else -> throw RuntimeException("Value of unknown type: ${field.value}")
-        }
-    }
-
-    return entity.build()
-}
-
-fun JsonNode.asList(): ListValue {
+private fun JsonNode.toListValue(): ListValue {
     val listValue = ListValue.newBuilder()
 
     elements().forEach { node ->
@@ -145,17 +125,17 @@ fun JsonNode.asList(): ListValue {
                 }
             }
             node.isBoolean -> listValue.addValue(node.asBoolean())
-            node.isObject -> listValue.addValue(createNestedEntityFromNode(node))
+            node.isObject -> listValue.addValue(node.toEntity())
         }
     }
 
     return listValue.build()
 }
 
-fun JsonNode.asTimestamp(): Timestamp = Timestamp.parseTimestamp(asText())
+private fun JsonNode.asTimestamp(): Timestamp = Timestamp.parseTimestamp(asText())
 
-fun Datastore.createKey(kind: String, name: String): Key =
+private fun Datastore.createKey(kind: String, name: String): Key =
     newKeyFactory().setKind(kind).newKey(name)
 
-fun Datastore.createKey(kind: String, id: Long): Key =
+private fun Datastore.createKey(kind: String, id: Long): Key =
     newKeyFactory().setKind(kind).newKey(id)

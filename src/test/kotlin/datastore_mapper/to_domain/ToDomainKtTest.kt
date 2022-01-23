@@ -1,159 +1,255 @@
 package datastore_mapper.to_domain
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import com.google.cloud.Timestamp
 import com.google.cloud.datastore.Entity
+import com.google.cloud.datastore.FullEntity
+import com.google.cloud.datastore.Key
+import com.google.cloud.datastore.ListValue
 import datastore_mapper.gcloud.EmulatedDatastore
-import datastore_mapper.using_jackson.toDomain
-import io.kotest.core.spec.style.FreeSpec
-import io.kotest.matchers.shouldBe
+import datastore_mapper.toDomain
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
 
-class ToDomainKtTest : FreeSpec({
+internal class ToDomainKtTest {
+    private val datastore = EmulatedDatastore.instance
+    private val keyFactory = datastore.client.newKeyFactory()
+    private val testKind = "TestKind"
+    private fun createKey(name: String): Key = keyFactory.setKind(testKind).newKey(name)
+    private fun createKey(id: Long): Key = keyFactory.setKind(testKind).newKey(id)
 
-    val datastore = EmulatedDatastore.instance
-    val keyFactory = datastore.client.newKeyFactory()
-    fun createKey(name: String) = keyFactory.setKind("TestKind").newKey(name)
-    fun createKey(id: Long) = keyFactory.setKind("TestKind").newKey(id)
-
-    "Keys" - {
-        "can read a string id into a given property" {
+    @Nested
+    inner class Keys {
+        @Test
+        fun `can read a string id into a given property`() {
             data class TestClass(val id: String)
 
             val entity = Entity.newBuilder(createKey("my-id")).build()
 
             val result = entity.toDomain(TestClass::class, TestClass::id)
 
-            result shouldBe TestClass(id = "my-id")
+            assertThat(result).isEqualTo(TestClass("my-id"))
         }
 
-        "can read a numerical id into a property of type Int" {
+        @Test
+        fun `can read a numerical id into a property of type Int`() {
             data class TestClass(val id: Int)
 
             val entity = Entity.newBuilder(createKey(123456L)).build()
 
             val result = entity.toDomain(TestClass::class, TestClass::id)
 
-            result shouldBe TestClass(id = 123456)
+            assertThat(result).isEqualTo(TestClass(123456))
         }
 
-        "can read a numerical id into a property of type Long" {
+        @Test
+        fun `can read a numerical id into a property of type Long`() {
             data class TestClass(val id: Long)
 
             val entity = Entity.newBuilder(createKey(123456L)).build()
 
             val result = entity.toDomain(TestClass::class, TestClass::id)
 
-            result shouldBe TestClass(id = 123456)
+            assertThat(result).isEqualTo(TestClass(123456))
         }
     }
 
-    "Reading properties on root entity" - {
-        "Simple property types" - {
-            "can convert a String property" {
-                data class TestClass(val id: String, val stringProperty: String)
+    @Nested
+    inner class Properties {
+        @Test
+        fun `can convert a String`() {
+            data class TestClass(val id: String, val string: String)
 
-                val entity = Entity.newBuilder(createKey("id"))
-                    .set("stringProperty", "Foo")
-                    .build()
+            val entity = Entity.newBuilder(createKey("id"))
+                .set("string", "Foo")
+                .build()
 
-                val result = entity.toDomain(TestClass::class, TestClass::id)
+            val result = entity.toDomain(TestClass::class, TestClass::id)
 
-                result shouldBe TestClass(id = "id", stringProperty = "Foo")
-            }
+            assertThat(result).isEqualTo(TestClass(id = "id", string = "Foo"))
+        }
 
-            "can convert an optional property" {
-                data class TestClass(val id: String, val optionalProperty: String?)
+        @Test
+        fun `converts an unset optional property to null`() {
+            data class TestClass(val id: String, val optional: String?)
 
-                val entity = Entity.newBuilder(createKey("id"))
-                    .set("optionalProperty", "Foo")
-                    .build()
+            val entity = Entity.newBuilder(createKey("id")).build()
 
-                val result = entity.toDomain(TestClass::class, TestClass::id)
+            val result = entity.toDomain(TestClass::class, TestClass::id)
 
-                result shouldBe TestClass(id = "id", optionalProperty = "Foo")
-            }
+            assertThat(result).isEqualTo(TestClass(id = "id", optional = null))
+        }
 
-            "can convert a null property" {
-                data class TestClass(val id: String, val optionalProperty: String?)
+        @Test
+        fun `can convert a Long to an Int`() {
+            data class TestClass(val id: String, val int: Int)
 
-                val entity = Entity.newBuilder(createKey("id")).build()
+            val entity = Entity.newBuilder(createKey("id"))
+                .set("int", 1234L)
+                .build()
 
-                val result = entity.toDomain(TestClass::class, TestClass::id)
+            val result = entity.toDomain(TestClass::class, TestClass::id)
 
-                result shouldBe TestClass(id = "id", optionalProperty = null)
-            }
+            assertThat(result).isEqualTo(TestClass(id = "id", int = 1234))
+        }
 
-            "can convert an Long property to an Int" {
-                data class TestClass(val id: String, val intProperty: Int)
+        @Test
+        fun `can convert a Long to a Long`() {
+            data class TestClass(val id: String, val long: Long)
 
-                val entity = Entity.newBuilder(createKey("id")).set("intProperty", 42L).build()
+            val entity = Entity.newBuilder(createKey("id"))
+                .set("long", 1234L)
+                .build()
 
-                val result = entity.toDomain(TestClass::class, TestClass::id)
+            val result = entity.toDomain(TestClass::class, TestClass::id)
 
-                result shouldBe TestClass(id = "id", intProperty = 42)
-            }
+            assertThat(result).isEqualTo(TestClass(id = "id", long = 1234L))
+        }
 
-            "can convert a Long property" {
-                data class TestClass(val id: String, val longProperty: Long)
+        @Test
+        fun `can convert a Boolean property`() {
+            data class TestClass(val id: String, val boolean: Boolean)
 
-                val entity = Entity.newBuilder(createKey("id")).set("longProperty", 42L).build()
+            val entity = Entity.newBuilder(createKey("id"))
+                .set("boolean", false)
+                .build()
 
-                val result = entity.toDomain(TestClass::class, TestClass::id)
+            val result = entity.toDomain(TestClass::class, TestClass::id)
 
-                result shouldBe TestClass(id = "id", longProperty = 42L)
-            }
+            assertThat(result).isEqualTo(TestClass(id = "id", boolean = false))
+        }
 
-            "can convert a Boolean property" {
-                data class TestClass(val id: String, val booleanProperty: Boolean)
+        @Test
+        fun `can convert a String property to a BigDecimal`() {
+            data class TestClass(val id: String, val bigDecimal: BigDecimal)
 
-                val entity = Entity.newBuilder(createKey("id")).set("booleanProperty", false).build()
+            val entity = Entity.newBuilder(createKey("id"))
+                .set("bigDecimal", "12.34")
+                .build()
 
-                val result = entity.toDomain(TestClass::class, TestClass::id)
+            val result = entity.toDomain(TestClass::class, TestClass::id)
 
-                result shouldBe TestClass(id = "id", booleanProperty = false)
-            }
+            assertThat(result).isEqualTo(TestClass(id = "id", bigDecimal = BigDecimal.valueOf(12.34)))
+        }
 
-            "can convert a String property to a BigDecimal" {
-                data class TestClass(val id: String, val bigDecimal: BigDecimal)
+        @Test
+        fun `can convert a Timestamp property to an Instant`() {
+            data class TestClass(val id: String, val instant: Instant)
 
-                val bigDecimal = BigDecimal(12.34)
+            val timestamp = "2020-01-01T10:00:00.00Z"
 
-                val entity = Entity.newBuilder(createKey("id")).set("bigDecimal", bigDecimal.toString()).build()
+            val entity = Entity.newBuilder(createKey("id"))
+                .set("instant", Timestamp.parseTimestamp(timestamp))
+                .build()
 
-                val result = entity.toDomain(TestClass::class, TestClass::id)
+            val result = entity.toDomain(TestClass::class, TestClass::id)
 
-                result shouldBe TestClass(id = "id", bigDecimal = bigDecimal)
-            }
+            assertThat(result).isEqualTo(TestClass(id = "id", instant = Instant.parse(timestamp)))
+        }
 
-            "can convert a Timestamp property to an Instant" {
-                data class TestClass(val id: String, val date: Instant)
+        @Test
+        fun `can convert a list of Strings`() {
+            data class TestClass(val id: String, val listOfStrings: List<String>)
 
-                val timestamp = "2020-01-01T10:00:00.00Z"
+            val entity = Entity.newBuilder(createKey("id"))
+                .set("listOfStrings", ListValue.newBuilder().addValue("one").addValue("two").build())
+                .build()
 
-                val entity = Entity.newBuilder(createKey("id"))
-                    .set("date", Timestamp.parseTimestamp(timestamp))
-                    .build()
+            val result = entity.toDomain(TestClass::class, TestClass::id)
 
-                val result = entity.toDomain(TestClass::class, TestClass::id)
+            assertThat(result).isEqualTo(TestClass(id = "id", listOfStrings = listOf("one", "two")))
+        }
 
-                result shouldBe TestClass(id = "id", date = Instant.parse(timestamp))
-            }
+        @Test
+        fun `can convert a list of Ints`() {
+            data class TestClass(val id: String, val listOfInts: List<Int>)
 
-            "can convert a Timestamp property to a String (if necessary?!)" {
-                data class TestClass(val id: String, val string: String)
+            val entity = Entity.newBuilder(createKey("id"))
+                .set("listOfInts", ListValue.newBuilder().addValue(1L).addValue(2L).build())
+                .build()
 
-                val timestamp = "2020-01-01T10:00:00.00Z"
+            val result = entity.toDomain(TestClass::class, TestClass::id)
 
-                val entity = Entity.newBuilder(createKey("id"))
-                    .set("string", Timestamp.parseTimestamp(timestamp))
-                    .build()
+            assertThat(result).isEqualTo(TestClass(id = "id", listOfInts = listOf(1, 2)))
+        }
 
-                val result = entity.toDomain(TestClass::class, TestClass::id)
+        @Test
+        fun canConvertAListOfEntities() {
+            // this test doesn't like having spaces in the test name
+            // the mapper seems not to like the nested class being a child of a function
+            // with spaces in the name
+            data class NestedClass(val string: String, val int: Int)
+            data class TestClass(val id: String, val listOfObjects: List<NestedClass>)
 
-                result shouldBe TestClass(id = "id", string = timestamp)
-            }
+            val entity = Entity.newBuilder(createKey("id"))
+                .set(
+                    "listOfObjects",
+                    ListValue.newBuilder()
+                        .addValue(
+                            FullEntity.newBuilder()
+                                .set("string", "one")
+                                .set("int", 1L)
+                                .build()
+                        )
+                        .addValue(
+                            FullEntity.newBuilder()
+                                .set("string", "two")
+                                .set("int", 2L)
+                                .build()
+                        )
+                        .build()
+                ).build()
+
+            val result = entity.toDomain(TestClass::class, TestClass::id)
+
+            assertThat(result).isEqualTo(
+                TestClass(
+                    id = "id",
+                    listOfObjects = listOf(
+                        NestedClass("one", 1),
+                        NestedClass("two", 2),
+                    )
+                )
+            )
         }
     }
-})
 
+    @Test
+    fun `can convert a nested entity`() {
+        data class NestedClass(val string: String, val int: Int, val long: Long, val instant: Instant, val boolean: Boolean)
+        data class TestClass(val id: String, val nestedObject: NestedClass)
+
+        val timestamp = "2020-01-01T10:00:00.00Z"
+
+        val entity = Entity.newBuilder(createKey("id"))
+            .set(
+                "nestedObject",
+                Entity.newBuilder()
+                    .set("string", "string-value")
+                    .set("long", 100L)
+                    .set("int", 1L)
+                    .set("instant", Timestamp.parseTimestamp(timestamp))
+                    .set("boolean", "false")
+                    .build()
+            ).build()
+
+        val result = entity.toDomain(TestClass::class, TestClass::id)
+
+        assertThat(result).isEqualTo(
+            TestClass(
+                id = "id",
+                nestedObject = NestedClass(
+                    string = "string-value",
+                    long = 100L,
+                    int = 1,
+                    instant = Instant.parse(timestamp),
+                    boolean = false,
+                )
+            )
+        )
+    }
+
+}

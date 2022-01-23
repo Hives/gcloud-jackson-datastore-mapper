@@ -1,4 +1,4 @@
-package datastore_mapper.using_jackson.performance_testing
+package datastore_mapper.performance_testing
 
 import TestClass
 import TestClass.NestedClass
@@ -12,9 +12,8 @@ import com.google.cloud.datastore.ListValue
 import com.google.cloud.datastore.Query
 import com.google.cloud.datastore.Value
 import datastore_mapper.to_entity_jackson.createDatastoreClient
-import datastore_mapper.using_jackson.createEntity
-import datastore_mapper.using_jackson.createKey
-import datastore_mapper.using_jackson.toDomain
+import datastore_mapper.toEntity
+import datastore_mapper.toDomain
 import java.math.BigDecimal
 import java.time.Instant
 import kotlin.system.measureTimeMillis
@@ -68,8 +67,7 @@ private fun persistAndRetrieveAutomatic(
     datastore: Datastore,
 ) {
     val entities = manyTestClasses.map {
-        createEntity(
-            fromValue = it,
+        it.toEntity(
             keyProperty = TestClass::id,
             kind = "PerformanceAutomatic",
             datastore = datastore
@@ -191,3 +189,6 @@ fun NestedClass.toEntityManual(): FullEntity<IncompleteKey>? =
         .set("bool", bool)
         .set("date", Timestamp.parseTimestamp(date.toString()))
         .build()
+
+private fun Datastore.createKey(kind: String, name: String): Key =
+    newKeyFactory().setKind(kind).newKey(name)
